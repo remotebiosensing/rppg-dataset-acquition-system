@@ -1,0 +1,20 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        // 설정 레포지토리 추가
+        mavenCentral()
+        // 프로젝트 레포지토리 추가
+        google()
+        jcenter()
+    }
+}
+rootProject.name = "RemotePPGDatasetAcquitionSystem"
+include ':app'
+include ':sdk'

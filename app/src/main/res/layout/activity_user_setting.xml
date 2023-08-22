@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="400dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/participantFullIDTextView"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textSize="16dp"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:text="Participant Full ID"
+            android:paddingVertical="6dp"/>
+
+        <EditText
+            android:id="@+id/participantFullIDEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:ems="10"
+            android:paddingLeft="8dp"
+            android:paddingVertical="6dp"
+            android:textSize="16dp"
+            android:singleLine="true"
+            android:inputType="text"
+            android:hint="ex) 394-1-1-0"
+            android:textColorHint="#66555555"
+            android:background="@color/white"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/serialNumberTextView"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textSize="16dp"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:text="Serial Number"
+            android:paddingVertical="6dp"/>
+
+        <EditText
+            android:id="@+id/serialNumberEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:ems="10"
+            android:paddingLeft="8dp"
+            android:paddingVertical="6dp"
+            android:textSize="16dp"
+            android:singleLine="true"
+            android:inputType="text"
+            android:hint="ex) 3YK3L151NT"
+            android:textColorHint="#66555555"
+            android:background="@color/white"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/dataBucketURLTextView"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textSize="16dp"
+            android:paddingVertical="6dp"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:text="data bucket URL" />
+
+        <EditText
+            android:id="@+id/dataBucketURLEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:background="@color/white"
+            android:ems="10"
+            android:paddingLeft="8dp"
+            android:paddingVertical="6dp"
+            android:textSize="16dp"
+            android:singleLine="true"
+            android:inputType="text"
+            android:hint="ex) s3://empatica-us-east-1-prod-data/v2/394/"
+            android:textColorHint="#66555555" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/accessKeyTextView"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textSize="16dp"
+            android:gravity="center"
+            android:paddingVertical="6dp"
+            android:layout_gravity="center"
+            android:text="Access Key" />
+
+        <EditText
+            android:id="@+id/accessKeyEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:background="@color/white"
+            android:ems="10"
+            android:paddingLeft="8dp"
+            android:paddingVertical="6dp"
+            android:textSize="16dp"
+            android:singleLine="true"
+            android:inputType="text"
+            android:hint="ex) AKIAWWZYTIF57XRMCFPO"
+            android:textColorHint="#66555555" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/secretKeyTextView"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:textSize="16dp"
+            android:gravity="center"
+            android:paddingVertical="6dp"
+            android:layout_gravity="center"
+            android:text="Secret Key" />
+
+        <EditText
+            android:id="@+id/secretKeyEditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:background="@color/white"
+            android:ems="10"
+            android:paddingLeft="8dp"
+            android:paddingVertical="6dp"
+            android:textSize="16dp"
+            android:singleLine="true"
+            android:inputType="text"
+            android:hint="ex) abkaoor-5p14l3"
+            android:textColorHint="#66555555" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center">
+
+        <TextView
+            android:id="@+id/settingTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="18dp"
+            android:padding="6dp"
+            android:text="설정" />
+    </LinearLayout>
+</LinearLayout>

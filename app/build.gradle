@@ -1,0 +1,60 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.example.bluetoothreceiver'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.example.bluetoothreceiver"
+        minSdk 24
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/ASL2.0'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'com.google.android.material:material:1.5.0'
+    testImplementation 'junit:junit:4.13.2'
+    implementation 'io.github.ParkSangGwon:tedpermission-normal:3.3.0'
+    implementation 'com.squareup.okhttp:okhttp:2.7.5'
+    implementation 'com.amazonaws:aws-android-sdk-s3:2.72.0'
+    implementation 'org.bytedeco:ffmpeg:4.4-1.5.6'
+    implementation "androidx.work:work-runtime:2.8.0"
+    implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.1000')
+    implementation files('libs/avro-android-1.11.2.jar')
+    implementation files('libs/commons-compress-1.22.jar')
+    implementation files('libs/jackson-annotations-2.14.2.jar')
+    implementation files('libs/jackson-core-2.14.2.jar')
+    implementation files('libs/jackson-databind-2.14.2.jar')
+    implementation files('libs/slf4j-api-1.7.36.jar')
+}
