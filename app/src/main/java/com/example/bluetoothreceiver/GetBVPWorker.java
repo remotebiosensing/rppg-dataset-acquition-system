@@ -1,6 +1,7 @@
 package com.example.bluetoothreceiver;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -33,6 +34,7 @@ public class GetBVPWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
+        SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("DeviceSettings", Context.MODE_PRIVATE);
         Long firstTimestamp = getInputData().getLong("firstTimestamp", 0);
         Long lastTimestamp = getLastTimestamp(firstTimestamp);
         Log.e("TEST", firstTimestamp + " " + lastTimestamp);
@@ -40,9 +42,14 @@ public class GetBVPWorker extends Worker {
         while(isSynced(firstTimestamp) == false) {
             Network network = connectivityManager.getActiveNetwork();
             NetworkCapabilities networkCapabilities = connectivityManager.getNetworkCapabilities(network);
-
+            AwsS3 awsS3 = new AwsS3(sharedPreferences.getString("accessKey", null),
+                    sharedPreferences.getString("secretKey", null),
+                    null,
+                    sharedPreferences.getString("bucket", null),
+                    sharedPreferences.getString("beforeDate", null),
+                    sharedPreferences.getString("afterDate", null));
             if (networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-                AwsS3 awsS3 = new AwsS3();
+
                 LocalDate localDate = null;
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     localDate = Instant.ofEpochMilli(firstTimestamp).atZone(ZoneId.systemDefault()).toLocalDate();

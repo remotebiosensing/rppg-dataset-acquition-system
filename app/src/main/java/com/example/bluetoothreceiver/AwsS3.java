@@ -1,8 +1,10 @@
 package com.example.bluetoothreceiver;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -47,11 +49,23 @@ import java.util.regex.Pattern;
 public class AwsS3 {
     AWSCredentials awsCredentials;
     private AmazonS3Client s3Client;
-    private String accessKey = "AKIAWWZYTIF57XRMCFPO";
+    /*private String accessKey = "AKIAWWZYTIF57XRMCFPO";
     private String secretKey = "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";
     private Region clientRegion = Region.getRegion(Regions.US_EAST_1);//Regions.US_EAST_1;
     private String bucket = "empatica-us-east-1-prod-data";
-    private String prefix = "v2/394/1/1/participant_data/2023-07-18/001-3YK3L151NT/raw_data/v6/";
+    private String beforeDate;
+    private String afterDate;
+    private String prefix = "v2/394/1/1/participant_data/2023-07-18/001-3YK3L151NT/raw_data/v6/";*/
+
+    private String accessKey;
+    private String secretKey;
+    private Region clientRegion;
+    private String bucket;
+    private String beforeDate;
+    private String afterDate;
+    private String prefix;
+
+
 
     String[] fileKeyList;
 
@@ -59,11 +73,11 @@ public class AwsS3 {
         put("us-east-1", Region.getRegion(Regions.US_EAST_1));
         /*put("us-east-2", Regions.US_EAST_2);
         put("us-gov-east-1", Regions.US_GOV_EAST_1);
-        put("us-west-1", Regions.US_WEST_1);
+        put("us-west-1, Regions.US_WEST_1);
         put("us-west-2", Regions.US_WEST_2);*/
     }};
 
-    public AwsS3() {
+    /*public AwsS3() {
         awsCredentials = new BasicAWSCredentials(
                 accessKey, secretKey
         );
@@ -71,14 +85,25 @@ public class AwsS3 {
         s3Client = new AmazonS3Client(
                 awsCredentials, clientRegion
         );
-    }
+    }*/
 
-    public AwsS3(String participantFullID, String serialNumber, String dataBucketURL, String accessKey, String secretKey) {
-        //participantFullID.split("-");
-        //this.prefix = dataBucketURL + participantFullID + "participant_data/" + date + "/" + serialNumber + "/raw_data/v6/"
-        //this.clientRegion = dataBucketURL.substring(6, dataBu)
+    public AwsS3(String accessKey, String secretKey, String regionName, String bucket, String beforeDate, String afterDate) {
+
+        this.clientRegion = stringRegionMap.get("us-east-1");
+        this.beforeDate = beforeDate;
+        this.afterDate = afterDate;
+        this.bucket = bucket;
         this.accessKey = accessKey;
         this.secretKey = secretKey;
+
+        awsCredentials = new BasicAWSCredentials(
+                accessKey, secretKey
+        );
+
+        s3Client = new AmazonS3Client(
+                awsCredentials, this.clientRegion
+        );
+
     }
 
     public static String isInvalidSetting(String participantFullID, String serialNumber, String dataBucketURL, String accessKey, String secretKey) {
@@ -160,31 +185,38 @@ public class AwsS3 {
     }
 
     public ArrayList<String> isDownloadable(String date, Long firstTimestamp, Long lastTimestamp) {
-        prefix = "v2/394/1/1/participant_data/" + date + "/001-3YK3L151NT/raw_data/v6/";
-        //final String[] fileName = {null};
+        prefix = beforeDate + date + afterDate;
+
         ArrayList<String> fileNameList = new ArrayList<>();
         try {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
-                    listObjectsV2Request.withBucketName(bucket).withPrefix(prefix);
-                    ListObjectsV2Result listObjectsV2Result = s3Client.listObjectsV2(listObjectsV2Request);
-                    List<S3ObjectSummary> objects = listObjectsV2Result.getObjectSummaries();
+                    try {
+                        ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
+                        listObjectsV2Request.withBucketName(bucket).withPrefix(prefix);
+                        ListObjectsV2Result listObjectsV2Result = s3Client.listObjectsV2(listObjectsV2Request);
+                        List<S3ObjectSummary> objects = listObjectsV2Result.getObjectSummaries();
 
-                    for (int i = 0; i < objects.size(); i++) {
-                        //Log.e("TEST", objects.get(i).getKey());
-                        String fileAddress = objects.get(i).getKey();
-                        Long fileTimestamp = Long.parseLong(fileAddress.substring(fileAddress.length() - 15, fileAddress.length() - 5));
-                        if(fileTimestamp * 1000 < firstTimestamp && firstTimestamp < fileTimestamp * 1000 + 15 * 60000
-                        || firstTimestamp <= fileTimestamp * 1000 && fileTimestamp * 1000 + 15 * 60000 <= lastTimestamp
-                        || fileTimestamp * 1000 <= lastTimestamp && lastTimestamp <= fileTimestamp * 1000 + 15 * 60000) { // 파일의 시작이 비디오를 찍기 시작한지 15분 이내인지
-                            fileNameList.add(objects.get(i).getKey());
+                        for (int i = 0; i < objects.size(); i++) {
+                            //Log.e("TEST", objects.get(i).getKey());
+                            String fileAddress = objects.get(i).getKey();
+                            Long fileTimestamp = Long.parseLong(fileAddress.substring(fileAddress.length() - 15, fileAddress.length() - 5));
+                            if(fileTimestamp * 1000 < firstTimestamp && firstTimestamp < fileTimestamp * 1000 + 15 * 60000
+                                    || firstTimestamp <= fileTimestamp * 1000 && fileTimestamp * 1000 + 15 * 60000 <= lastTimestamp
+                                    || fileTimestamp * 1000 <= lastTimestamp && lastTimestamp <= fileTimestamp * 1000 + 15 * 60000) { // 파일의 시작이 비디오를 찍기 시작한지 15분 이내인지
+                                fileNameList.add(objects.get(i).getKey());
                             /*if(lastTimestamp <= fileTimestamp * 1000 + 15 * 60000) {
                                 break;
                             }*/
+                            }
                         }
+                    } catch (AmazonClientException e) {
+                        throw new RuntimeException(e);
+                    } catch (NumberFormatException e) {
+                        throw new RuntimeException(e);
                     }
+
                 }
             });
 
@@ -193,7 +225,7 @@ public class AwsS3 {
         } catch (Exception e) {
             Log.e("TEST", e.toString());
         }
-        if(fileNameList.size() == 0) s3Client.shutdown();
+        s3Client.shutdown();
         return fileNameList;
     }
 
@@ -211,7 +243,12 @@ public class AwsS3 {
             String fileName = fileNameList.get(i);
             String[] splitStr = fileName.split("/");
             File file = new File(context.getFilesDir().getPath() + "/record/" + firstTimestamp, "temp" + i + ".avro");
-            TransferObserver transferObserver = transferUtility.download(bucket, fileName, file);
+            TransferObserver transferObserver;
+            try {
+                transferObserver = transferUtility.download(bucket, fileName, file);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             transferObserver.setTransferListener(new TransferListener() {
                 @Override
                 public void onStateChanged(int id, TransferState state) {

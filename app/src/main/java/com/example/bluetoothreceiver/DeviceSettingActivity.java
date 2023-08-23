@@ -12,9 +12,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-public class UserSettingActivity extends Activity {
+public class DeviceSettingActivity extends Activity {
     EditText participantFullIDEditText;
     EditText serialNumberEditText;
     EditText dataBucketURLEditText;
@@ -25,7 +23,6 @@ public class UserSettingActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_user_setting);
 
@@ -51,22 +48,7 @@ public class UserSettingActivity extends Activity {
                 String accessKey = accessKeyEditText.getText().toString();
                 String secretKey = secretKeyEditText.getText().toString();
 
-                //SharedPreferences sharedPreferences = getPreferences(Context.MODE_PRIVATE);
-                //SharedPreferences.Editor editor = sharedPreferences.edit();
 
-                //String[] splitParticipantID = participantFullID.split("-");
-                //dataBucketURL.substring(5);
-                //String bucket = dataBucketURL.substring(5).split("/")[0];
-                //String prefix = dataBucketURL[1] + "/" + split + "participant_data/" + date + "/" + serialNumber + "/" + rawdata + "/v6/";
-                //editor.putString("accessKey", accessKey);
-                //editor.putString("secretKey", secretKey);
-
-
-                //String[] splitBucketURL = dataBucketURL.split("-");
-                //String clientRegion = splitBucketURL[1] + "-" + splitBucketURL[2] + "-" + splitBucketURL[3];
-                //String clientRegion = "us-east-1";
-                //String preString = "v2/" + splitParticipantID[0] + "/" + splitParticipantID[1] + "/" + splitParticipantID[2] + "/participant_data/";
-                //String postString = "/" + splitParticipantID[3] + "-" + serialNumber + "/raw_data/v6/";
                 String errorCode;
                 if((errorCode = AwsS3.isInvalidSetting(participantFullID, serialNumber, dataBucketURL, accessKey, secretKey)) != null) {
                     Animation animShake = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.shake_animation);
@@ -81,17 +63,38 @@ public class UserSettingActivity extends Activity {
                         Log.e("TEST", "dataBucketURL shake");
                     }
                 } else {
-                    accessKeyEditText.getText().toString();
-                    secretKeyEditText.getText().toString();
-
+                    processingAndSave(participantFullID, serialNumber, dataBucketURL, accessKey, secretKey);
+                    finish();
                 }
             }
         });
     }
 
-    private void processing(String participantFullID, String serialNumber, String dataBucketURL, String accessKey, String SecretKey){
-        String clientRegion = "us-east-1";
+    private void processingAndSave(String participantFullID, String serialNumber, String dataBucketURL, String accessKey, String secretKey){
+        SharedPreferences sharedPreferences = getSharedPreferences("DeviceSettings", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
         String bucket = dataBucketURL.substring(5).split("/")[0];
+        Log.e("TEST", "bucket : " + bucket);
+        //String prefix = dataBucketURL[1] + "/" + split + "participant_data/" + date + "/" + serialNumber + "/" + rawdata + "/v6/";
+        String[] splitID = participantFullID.split("-");
+        String beforeDate = "v2/" + splitID[0] + "/" + splitID[1] + "/" + splitID[2] + "/participant_data/";
+        String afterDate = "/" + splitID[3] + "-" + serialNumber + "/raw_data/v6/";
+
+        editor.putString("bucket", bucket);
+        editor.putString("beforeDate", beforeDate);
+        editor.putString("afterDate", afterDate);
+        editor.putString("accessKey", accessKey);
+        editor.putString("secretKey", secretKey);
+
+        editor.commit();
+        //String[] splitBucketURL = dataBucketURL.split("-");
+        //String clientRegion = splitBucketURL[1] + "-" + splitBucketURL[2] + "-" + splitBucketURL[3];
+        //String clientRegion = "us-east-1";
+        //String preString = "v2/" + splitParticipantID[0] + "/" + splitParticipantID[1] + "/" + splitParticipantID[2] + "/participant_data/";
+        //String postString = "/" + splitParticipantID[3] + "-" + serialNumber + "/raw_data/v6/";
+
+        String clientRegion = "us-east-1";
         //String
     }
 

@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
-import android.hardware.Sensor;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -114,7 +113,7 @@ public class RecordListActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                Intent intent = new Intent(getApplicationContext(), UserSettingActivity.class);
+                Intent intent = new Intent(getApplicationContext(), DeviceSettingActivity.class);
                 startActivityResultUserSetting.launch(intent);
             }
         });

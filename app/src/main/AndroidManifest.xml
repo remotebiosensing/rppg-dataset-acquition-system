@@ -51,7 +51,7 @@
         <activity android:name=".RecordListActivity" />
         <activity android:name=".VideoRecordingActivity" />
         <activity
-            android:name=".UserSettingActivity"
+            android:name=".DeviceSettingActivity"
             android:theme="@android:style/Theme.Dialog" />
     </application>
 
