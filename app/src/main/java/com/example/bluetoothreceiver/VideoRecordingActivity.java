@@ -1,9 +1,12 @@
 package com.example.bluetoothreceiver;
 
 import android.Manifest;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.SurfaceTexture;
 import android.hardware.Sensor;
@@ -35,6 +38,10 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -68,15 +75,13 @@ import java.util.Map;
 import java.util.Set;
 
 public class VideoRecordingActivity extends AppCompatActivity {
-    private AmazonS3 amazonS3;
-    private String accessKey = "empatica-us-east-1-prod-data/v2/394/";
-    private String secretKey = "AKIAWWZYTIF5VZGAPPEV";
-    private Regions clientRegion = Regions.AP_NORTHEAST_2;
-    private String bucket = "";
     private String recordDirectory;
-    private ImageReader imageReader;
-    private TextureView textureView;
 
+    private TextView userNameTextView;
+    private TextView userAgeTextView;
+    private TextureView textureView;
+    private TextView recordTextView;
+    private TextView userSettingTextView;
     private CameraDevice cameraDevice;
     private Size previewSize;
     private CameraCaptureSession cameraSession;
@@ -84,7 +89,7 @@ public class VideoRecordingActivity extends AppCompatActivity {
 
     private MediaRecorder mediaRecorder;
 
-    private TextView recordTextView;
+    ActivityResultLauncher<Intent> startActivityResultUserSetting;
     private HandlerThread backgroundHandlerThread;
     private Handler backgroundHandler;
     private BluetoothAdapter bluetoothAdapter;
@@ -100,8 +105,11 @@ public class VideoRecordingActivity extends AppCompatActivity {
 
     Context context;
 
+
+
     SensorReceiver sensorReceiver;
     static final Map<Integer, Pair<String, String[]>> sensorInfoMap = new HashMap<Integer, Pair<String, String[]>>(){{
+        put(Sensor.TYPE_ACCELEROMETER, new Pair<>("acc", new String[]{"x","y","z"}));
         put(Sensor.TYPE_GYROSCOPE, new Pair<>("gyro", new String[]{"x","y","z"}));
         put(Sensor.TYPE_LIGHT, new Pair<>("light", new String[]{"value"}));
     }};
@@ -112,9 +120,34 @@ public class VideoRecordingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_video_recording);
 
         permission();
-        initTextureView();
+
         recordDirectory = getApplicationContext().getFilesDir().getPath() + "/record";
         context = getApplicationContext();
+
+        findView();
+        initView();
+
+        startActivityResultUserSetting = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        Log.e("TEST", String.valueOf(result.getResultCode()));
+                        if (result.getResultCode() == Activity.RESULT_OK) {
+                            Log.e("TEST", "ACTIVITY.RESULT_OK");
+                            SharedPreferences sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
+
+                            String userName = sharedPreferences.getString("userName", null);
+                            String userAge = sharedPreferences.getString("userAge", null);
+
+                            if(userName != null && userAge != null) {
+                                userNameTextView.setText(userName);
+                                userAgeTextView.setText(userAge);
+                            }
+                        }
+                    }
+                }
+        );
         //selectBluetoothDevice();
         //SharedPreferences connectedWearable = getSharedPreferences("connectedWearable", Activity.MODE_PRIVATE);
         //selectedDeviceAddress = connectedWearable.getString("address", null);
@@ -123,22 +156,80 @@ public class VideoRecordingActivity extends AppCompatActivity {
         //Bluetooth bluetoothReceiver = new Bluetooth(getApplicationContext(), selectedDeviceAddress, selectedBluetoothDevice);
         //bluetoothReceiver.scanDevices();
 
+
+
+    }
+
+    private void findView() {
+        userNameTextView = findViewById(R.id.userNameTextView);
+        userAgeTextView = findViewById(R.id.userAgeTextView);
+        textureView = findViewById(R.id.textureView);
+        userSettingTextView = findViewById(R.id.userSettingTextView);
         recordTextView = findViewById(R.id.recordTextView);
+    }
+
+    private void initView() {
+        SharedPreferences sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
+
+        String userName = sharedPreferences.getString("userName", null);
+        String userAge = sharedPreferences.getString("userAge", null);
+
+        if(userName != null && userAge != null) {
+            userNameTextView.setText(userName);
+            userAgeTextView.setText(userAge);
+        }
+
+        textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+            @Override
+            public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
+                openCamera();
+            }
+
+            @Override
+            public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int width, int height) {
+            }
+
+            @Override
+            public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
+                return false;
+            }
+
+            @Override
+            public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
+
+            }
+        });
+
+        userSettingTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), UserSettingActivity.class);
+                startActivityResultUserSetting.launch(intent);
+            }
+        });
+
         recordTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (recording == false) {
-                    sensorReceiver = new SensorReceiver(getApplicationContext());
-                    frameTimestamps = new ArrayList<>();
-                    startBackgroundThread();
-                    new File(recordDirectory, "temp").mkdir();
-                    new File(recordDirectory + "/temp", "image").mkdir();
-                    //imageReader = ImageReader.newInstance(640, 360, ImageFormat.JPEG, 60);
-                    setupMediaRecorder(1280, 720);
-                    startRecording();
-                    recording = true;
-                    recordTextView.setText("중지");
+                    SharedPreferences sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
 
+                    String userName = sharedPreferences.getString("userName", null);
+                    String userAge = sharedPreferences.getString("userAge", null);
+                    if( userName != null && userAge != null) {
+                        sensorReceiver = new SensorReceiver(getApplicationContext());
+                        frameTimestamps = new ArrayList<>();
+                        startBackgroundThread();
+                        new File(recordDirectory, "temp").mkdir();
+                        new File(recordDirectory + "/temp", "image").mkdir();
+                        //imageReader = ImageReader.newInstance(640, 360, ImageFormat.JPEG, 60);
+                        setupMediaRecorder(1280, 720);
+                        startRecording();
+                        recording = true;
+                        recordTextView.setText("중지");
+                    } else {
+                        Toast.makeText(getApplicationContext(), "First set up the user", Toast.LENGTH_SHORT);
+                    }
                 } else if (recording == true) {
                     stopRecording();
                 }
@@ -172,6 +263,7 @@ public class VideoRecordingActivity extends AppCompatActivity {
                 fileRename(recordDirectory, "temp", startTimestamp);
                 fileRename(recordDirectory + "/" + startTimestamp, "temp.mp4", startTimestamp + ".mp4");
 
+                writeUserInfo(startTimestamp);
                 writeTimestamp(startTimestamp);
                 writeSensor(startTimestamp);
 
@@ -188,6 +280,33 @@ public class VideoRecordingActivity extends AppCompatActivity {
         thread.start();
 
         openCamera();
+    }
+
+    private void saveJsonToFile(File file, JSONObject jsonObject) {
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            fileOutputStream.write(jsonObject.toString().getBytes());
+            fileOutputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void writeUserInfo(String startTimestamp) {
+        SharedPreferences sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
+
+        String userName = sharedPreferences.getString("userName", null);
+        String userAge = sharedPreferences.getString("userAge", null);
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("userName", userName);
+            jsonObject.put("userAge", userAge);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        File userInfoFile = new File(recordDirectory + "/" + startTimestamp, "userInfo.json");
+        saveJsonToFile(userInfoFile, jsonObject);
     }
 
     private void writeTimestamp(String startTimestamp) {
@@ -226,36 +345,14 @@ public class VideoRecordingActivity extends AppCompatActivity {
                 throw new RuntimeException(e);
             }
         }
+        File sensorFile = new File(recordDirectory + "/" + startTimestamp, "deviceSensor.json");
+        saveJsonToFile(sensorFile, rootObject);
     }
 
     private void fileRename(String filePath, String oldName, String newName) {
         File oldFile = new File(filePath, oldName);
         File newFile = new File(filePath, newName);
         oldFile.renameTo(newFile);
-    }
-
-    private void initTextureView() {
-        textureView = findViewById(R.id.textureView);
-        textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
-            @Override
-            public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
-                openCamera();
-            }
-
-            @Override
-            public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int width, int height) {
-            }
-
-            @Override
-            public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
-                return false;
-            }
-
-            @Override
-            public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
-
-            }
-        });
     }
 
     private void openCamera() {
@@ -457,8 +554,6 @@ public class VideoRecordingActivity extends AppCompatActivity {
                 }*/
             }
     };
-
-
 
     private void saveImage(Image image, long timestamp) {
         String fileName = timestamp + ".jpg";

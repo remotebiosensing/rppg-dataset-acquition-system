@@ -24,7 +24,7 @@ public class DeviceSettingActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.activity_user_setting);
+        setContentView(R.layout.activity_device_setting);
 
         findView();
         initView();

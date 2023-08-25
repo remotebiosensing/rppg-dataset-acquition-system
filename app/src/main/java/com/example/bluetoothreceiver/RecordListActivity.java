@@ -45,9 +45,9 @@ import java.util.Set;
 public class RecordListActivity extends AppCompatActivity {
     TextView networkNotConnectedTextView;
     LinearLayout recordingListLinearLayout;
-    TextView userSettingTextView;
+    TextView deviceSettingTextView;
     TextView recordVideoTextView;
-    ActivityResultLauncher<Intent> startActivityResultUserSetting;
+    ActivityResultLauncher<Intent> startActivityResultDeviceSetting;
     ActivityResultLauncher<Intent> startActivityResultRecording;
     //Map<Long, Integer> notSynced = new HashMap<>();
 
@@ -75,7 +75,7 @@ public class RecordListActivity extends AppCompatActivity {
         }).start();*/
 
 
-        startActivityResultUserSetting = registerForActivityResult(
+        startActivityResultDeviceSetting = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {
                 @Override
@@ -104,17 +104,17 @@ public class RecordListActivity extends AppCompatActivity {
     private void findView() {
         networkNotConnectedTextView = findViewById(R.id.networkNotConnectedTextView);
         recordingListLinearLayout = findViewById(R.id.recordingListLinearLayout);
-        userSettingTextView = findViewById(R.id.userSettingTextViiew);
+        deviceSettingTextView = findViewById(R.id.deviceSettingTextView);
         recordVideoTextView = findViewById(R.id.recordVideoTextView);
     }
 
     private void initView() {
-        userSettingTextView.setOnClickListener(new View.OnClickListener() {
+        deviceSettingTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 Intent intent = new Intent(getApplicationContext(), DeviceSettingActivity.class);
-                startActivityResultUserSetting.launch(intent);
+                startActivityResultDeviceSetting.launch(intent);
             }
         });
 

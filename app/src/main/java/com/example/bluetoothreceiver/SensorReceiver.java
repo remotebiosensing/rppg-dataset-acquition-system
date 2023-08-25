@@ -26,7 +26,7 @@ public class SensorReceiver implements SensorEventListener {
     SensorReceiver(Context context) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
 
-        addSensor(Sensor.TYPE_GYROSCOPE);
+        addSensor(Sensor.TYPE_ACCELEROMETER);
         addSensor(Sensor.TYPE_LIGHT);
 
         registerSensors();
@@ -47,6 +47,7 @@ public class SensorReceiver implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         long timestamp = event.timestamp / 1000000;
+        timestamp = System.currentTimeMillis() - android.os.SystemClock.elapsedRealtime() + timestamp;
         int sensorType = event.sensor.getType();
         if(sensorRecord.containsKey(sensorType)) {
             sensorRecord.get(sensorType).add(new Pair<>(timestamp, event.values));

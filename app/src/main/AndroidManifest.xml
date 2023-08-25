@@ -53,6 +53,8 @@
         <activity
             android:name=".DeviceSettingActivity"
             android:theme="@android:style/Theme.Dialog" />
+        <activity android:name=".UserSettingActivity"
+            android:theme="@android:style/Theme.Dialog"/>
     </application>
 
 </manifest>
