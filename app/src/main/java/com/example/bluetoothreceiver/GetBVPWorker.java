@@ -91,6 +91,6 @@ public class GetBVPWorker extends Worker {
         for(int i = 0; i < folderArray.length; i++) {
         }
         List<String> fileList = new ArrayList<>(Arrays.asList(folderArray));
-        return fileList.contains("syncedBvp.csv");
+        return fileList.contains(Config.FILE_SYNCED_BVP + Config.CSV_FOOTER);
     }
 }

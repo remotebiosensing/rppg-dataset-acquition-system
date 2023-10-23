@@ -20,14 +20,11 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.CamcorderProfile;
 import android.media.Image;
-import android.media.ImageReader;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.telecom.VideoProfile;
 import android.util.Log;
 import android.util.Pair;
 import android.util.Size;
@@ -50,9 +47,6 @@ import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.normal.TedPermission;
 
@@ -73,8 +67,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+//TODO 추후에 Camera 관련 enhancement 진행 가능
 public class VideoRecordingActivity extends AppCompatActivity {
+    private static final String TAG = VideoRecordingActivity.class.getSimpleName();
     private String recordDirectory;
 
     private TextView userNameTextView;
@@ -121,7 +116,7 @@ public class VideoRecordingActivity extends AppCompatActivity {
 
         permission();
 
-        recordDirectory = getApplicationContext().getFilesDir().getPath() + "/record";
+        recordDirectory = getApplicationContext().getFilesDir().getPath() + "/" + Config.CHILD_RECORD_DIR;
         context = getApplicationContext();
 
         findView();
@@ -132,13 +127,13 @@ public class VideoRecordingActivity extends AppCompatActivity {
                 new ActivityResultCallback<ActivityResult>() {
                     @Override
                     public void onActivityResult(ActivityResult result) {
-                        Log.e("TEST", String.valueOf(result.getResultCode()));
+                        Log.e(TAG, String.valueOf(result.getResultCode()));
                         if (result.getResultCode() == Activity.RESULT_OK) {
-                            Log.e("TEST", "ACTIVITY.RESULT_OK");
-                            SharedPreferences sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
+                            Log.e(TAG, "ACTIVITY.RESULT_OK");
+                            SharedPreferences sharedPreferences = getSharedPreferences(Config.KEY_USER_INFO, Context.MODE_PRIVATE);
 
-                            String userName = sharedPreferences.getString("userName", null);
-                            String userAge = sharedPreferences.getString("userAge", null);
+                            String userName = sharedPreferences.getString(Config.FIELD_USER_NAME, null);
+                            String userAge = sharedPreferences.getString(Config.FIELD_USER_AGE, null);
 
                             if(userName != null && userAge != null) {
                                 userNameTextView.setText(userName);
@@ -169,10 +164,10 @@ public class VideoRecordingActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        SharedPreferences sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(Config.KEY_USER_INFO, Context.MODE_PRIVATE);
 
-        String userName = sharedPreferences.getString("userName", null);
-        String userAge = sharedPreferences.getString("userAge", null);
+        String userName = sharedPreferences.getString(Config.FIELD_USER_NAME, null);
+        String userAge = sharedPreferences.getString(Config.FIELD_USER_AGE, null);
 
         if(userName != null && userAge != null) {
             userNameTextView.setText(userName);
@@ -212,16 +207,16 @@ public class VideoRecordingActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (recording == false) {
-                    SharedPreferences sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
+                    SharedPreferences sharedPreferences = getSharedPreferences(Config.KEY_USER_INFO, Context.MODE_PRIVATE);
 
-                    String userName = sharedPreferences.getString("userName", null);
-                    String userAge = sharedPreferences.getString("userAge", null);
+                    String userName = sharedPreferences.getString(Config.FIELD_USER_NAME, null);
+                    String userAge = sharedPreferences.getString(Config.FIELD_USER_AGE, null);
                     if( userName != null && userAge != null) {
                         sensorReceiver = new SensorReceiver(getApplicationContext());
                         frameTimestamps = new ArrayList<>();
                         startBackgroundThread();
-                        new File(recordDirectory, "temp").mkdir();
-                        new File(recordDirectory + "/temp", "image").mkdir();
+                        new File(recordDirectory, Config.CHILD_TEMP_DIR).mkdir();
+                        new File(recordDirectory + "/"+ Config.CHILD_TEMP_DIR, Config.CHILD_IMAGE_DIR).mkdir();
                         //imageReader = ImageReader.newInstance(640, 360, ImageFormat.JPEG, 60);
                         setupMediaRecorder(1280, 720);
                         startRecording();
@@ -255,20 +250,21 @@ public class VideoRecordingActivity extends AppCompatActivity {
             @Override
             public void run() {
 
-                File dir = new File(recordDirectory + "/temp", "image");
+                File dir = new File(recordDirectory + "/" + Config.CHILD_TEMP_DIR, Config.CHILD_IMAGE_DIR);
                 File files[] = dir.listFiles();
                 Arrays.sort(files);
                 String startTimestamp = frameTimestamps.get(1) + "";
 
-                fileRename(recordDirectory, "temp", startTimestamp);
-                fileRename(recordDirectory + "/" + startTimestamp, "temp.mp4", startTimestamp + ".mp4");
+                fileRename(recordDirectory, Config.CHILD_TEMP_DIR, startTimestamp);
+                fileRename(recordDirectory + "/" + startTimestamp
+                        , Config.CHILD_TEMP_DIR + Config.MP4_FOOTER, startTimestamp + Config.MP4_FOOTER);
 
                 writeUserInfo(startTimestamp);
                 writeTimestamp(startTimestamp);
                 writeSensor(startTimestamp);
 
                 Data inputData = new Data.Builder()
-                        .putString("timestamp", startTimestamp)
+                        .putString(Config.FIELD_TIMESTAMP, startTimestamp)
                         .build();
                 OneTimeWorkRequest oneTimeWorkRequest = new OneTimeWorkRequest.Builder(ImageExtractWorker.class)
                         .setInputData(inputData)
@@ -293,24 +289,26 @@ public class VideoRecordingActivity extends AppCompatActivity {
     }
 
     private void writeUserInfo(String startTimestamp) {
-        SharedPreferences sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(Config.KEY_USER_INFO, Context.MODE_PRIVATE);
 
-        String userName = sharedPreferences.getString("userName", null);
-        String userAge = sharedPreferences.getString("userAge", null);
+        String userName = sharedPreferences.getString(Config.FIELD_USER_NAME, null);
+        String userAge = sharedPreferences.getString(Config.FIELD_USER_AGE, null);
 
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("userName", userName);
-            jsonObject.put("userAge", userAge);
+            jsonObject.put(Config.FIELD_USER_NAME, userName);
+            jsonObject.put(Config.FIELD_USER_AGE, userAge);
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        File userInfoFile = new File(recordDirectory + "/" + startTimestamp, "userInfo.json");
+        File userInfoFile = new File(recordDirectory + "/" + startTimestamp
+                , Config.KEY_USER_INFO + Config.JSON_FOOTER);
         saveJsonToFile(userInfoFile, jsonObject);
     }
 
     private void writeTimestamp(String startTimestamp) {
-        File timestampFile = new File(recordDirectory + "/" + startTimestamp, "imageTimestamp.csv");
+        File timestampFile = new File(recordDirectory + "/" + startTimestamp
+                , Config.FILE_IMAGE_TIMESTAMP + Config.CSV_FOOTER);
         BufferedWriter bw = null;
         try {
             bw = new BufferedWriter(new FileWriter(timestampFile));
@@ -334,7 +332,7 @@ public class VideoRecordingActivity extends AppCompatActivity {
                 ArrayList<Pair<Long, float[]>> value = sensorRecord.get(key);
                 for (Pair<Long, float[]> record : value) {
                     JSONObject recordObject = new JSONObject();
-                    recordObject.put("timestamp", record.first);
+                    recordObject.put(Config.FIELD_TIMESTAMP, record.first);
                     for (int i = 0; i < record.second.length; i++) {
                         recordObject.put(sensorValueName[i], record.second[i]);
                     }
@@ -345,7 +343,8 @@ public class VideoRecordingActivity extends AppCompatActivity {
                 throw new RuntimeException(e);
             }
         }
-        File sensorFile = new File(recordDirectory + "/" + startTimestamp, "deviceSensor.json");
+        File sensorFile = new File(recordDirectory + "/" + startTimestamp
+                , Config.FILE_DEVICE_SENSOR + Config.JSON_FOOTER);
         saveJsonToFile(sensorFile, rootObject);
     }
 
@@ -386,13 +385,13 @@ public class VideoRecordingActivity extends AppCompatActivity {
 
                 @Override
                 public void onError(@NonNull CameraDevice cameraDevice, int errorCode) {
-                    Log.e("TEST", "MMM errorCode = " + errorCode);
+                    Log.e(TAG, "MMM errorCode = " + errorCode);
                     cameraDevice.close();
                     cameraDevice = null;
                 }
             }, null);
         } catch (CameraAccessException e) {
-            Log.e("TEST", "MMM openCamera ", e);
+            Log.e(TAG, "MMM openCamera ", e);
         }
     }
     private void showCameraPreview() {
@@ -450,7 +449,7 @@ public class VideoRecordingActivity extends AppCompatActivity {
         mediaRecorder.setVideoSize(width, height);
         mediaRecorder.setOrientationHint(270);
         mediaRecorder.setVideoFrameRate(30);
-        mediaRecorder.setOutputFile(recordDirectory + "/temp/temp.mp4");
+        mediaRecorder.setOutputFile(recordDirectory + "/" + Config.CHILD_TEMP_DIR + "/" + Config.CHILD_TEMP_DIR + Config.MP4_FOOTER);
         //mediaRecorder.setVideoProfile(VideoProfile.QUALITY_HIGH);
         //mediaRecorder.setVideoProfile(new VideoProfile());
         try {
@@ -557,7 +556,7 @@ public class VideoRecordingActivity extends AppCompatActivity {
 
     private void saveImage(Image image, long timestamp) {
         String fileName = timestamp + ".jpg";
-        File imageFile = new File(recordDirectory + "/temp/image", fileName);
+        File imageFile = new File(recordDirectory + "/" + Config.CHILD_TEMP_DIR + "/" + Config.CHILD_IMAGE_DIR, fileName);
 
         try (FileOutputStream fos = new FileOutputStream(imageFile)) {
             ByteBuffer buffer = image.getPlanes()[0].getBuffer();

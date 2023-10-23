@@ -32,8 +32,8 @@ public class UserSettingActivity extends Activity {
         initView();
     }
     private void findView() {
-        editTextMap.put("userName", findViewById(R.id.userNameEditText));
-        editTextMap.put("userAge", findViewById(R.id.userAgeEditText));
+        editTextMap.put(Config.FIELD_USER_NAME, findViewById(R.id.userNameEditText));
+        editTextMap.put(Config.FIELD_USER_AGE, findViewById(R.id.userAgeEditText));
 
         userInfoSettingTextView = findViewById(R.id.userInfoSettingTextView);
     }
@@ -51,7 +51,7 @@ public class UserSettingActivity extends Activity {
     }
 
     private void saveInfo(){
-        SharedPreferences sharedPreferences = getSharedPreferences("UserInfo", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(Config.KEY_USER_INFO, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         Set<String> keySet = editTextMap.keySet();

@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class Bluetooth {
+    private static final String TAG = Bluetooth.class.getSimpleName();
     public static final int INTENT_REQUEST_BLUETOOTH_ENABLE = 0x0701;
 
     private final BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
@@ -135,7 +136,7 @@ public class Bluetooth {
             if (connected == false && result.getDevice().getAddress().compareTo(selectedDeviceAddress) == 0) {
                 //Log.e("TEST", "find");
                 if (connGATT(result.getDevice()) == true) {
-                    Log.e("TEST", "connected");
+                    Log.e(TAG, "connected");
                     connected = true;
                 } else {
 
@@ -208,7 +209,7 @@ public class Bluetooth {
                 return;
             }
             if (newState == BluetoothGatt.STATE_CONNECTED && status == BluetoothGatt.GATT_SUCCESS) {
-                Log.e("TEST", "connected");
+                Log.e(TAG, "connected");
                 gatt.discoverServices();
             }
 
@@ -246,7 +247,7 @@ public class Bluetooth {
                 } catch (UnsupportedEncodingException e) {
                     throw new RuntimeException(e);
                 }
-                Log.e("TEST", "data : " + data);
+                Log.e(TAG, "data : " + data);
             }
 /*
         @Override

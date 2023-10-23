@@ -23,13 +23,13 @@ public class ImageExtractWorker extends Worker {
 
     public ImageExtractWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
-        recordDirectory = getApplicationContext().getFilesDir().getPath() + "/record";
+        recordDirectory = getApplicationContext().getFilesDir().getPath() + "/" + Config.CHILD_RECORD_DIR;
     }
 
     @NonNull
     @Override
     public Result doWork() {
-        String startTimestamp = getInputData().getString("timestamp");
+        String startTimestamp = getInputData().getString(Config.FIELD_TIMESTAMP);
 
         ArrayList<Long> frameTimestamps = readTimestamp(startTimestamp);
 
@@ -39,7 +39,7 @@ public class ImageExtractWorker extends Worker {
     }
 
     private ArrayList<Long> readTimestamp(String startTimestamp) {
-        File timestampFile = new File(recordDirectory + "/" + startTimestamp, "imageTimestamp.csv");
+        File timestampFile = new File(recordDirectory + "/" + startTimestamp, Config.FILE_IMAGE_TIMESTAMP + Config.CSV_FOOTER);
         ArrayList<Long> frameTimestamps = new ArrayList<>();
         try {
             BufferedReader br = new BufferedReader(new FileReader(timestampFile));
@@ -59,7 +59,7 @@ public class ImageExtractWorker extends Worker {
 
     private void extractImageFromVideo(String startTimestamp, ArrayList<Long> frameTimestamps){
         MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-        mediaMetadataRetriever.setDataSource(recordDirectory + "/" + startTimestamp + "/" + startTimestamp + ".mp4");
+        mediaMetadataRetriever.setDataSource(recordDirectory + "/" + startTimestamp + "/" + startTimestamp + Config.MP4_FOOTER);
         int frameCount = Integer.parseInt(mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_FRAME_COUNT));
 
         for(int i = 0; i < frameTimestamps.size(); i++) {
@@ -73,15 +73,15 @@ public class ImageExtractWorker extends Worker {
     }
 
     private boolean imageExists(String startTimestamp, long timestamp) {
-        String fileName = timestamp + ".jpg";
-        File imageFile = new File(recordDirectory + "/" + startTimestamp + "/image", fileName);
+        String fileName = timestamp + Config.JPG_FOOTER;
+        File imageFile = new File(recordDirectory + "/" + startTimestamp + "/" + Config.CHILD_IMAGE_DIR, fileName);
         if(imageFile.exists()) return true;
         else return false;
     }
 
     private void saveImage(String startTimestamp, Bitmap bitmap, long timestamp) {
-        String fileName = timestamp + ".jpg";
-        File imageFile = new File(recordDirectory + "/" + startTimestamp + "/image", fileName);
+        String fileName = timestamp + Config.JPG_FOOTER;
+        File imageFile = new File(recordDirectory + "/" + startTimestamp + "/" + Config.CHILD_IMAGE_DIR, fileName);
         if(imageFile.exists()) return ;
         FileOutputStream fos = null;
         try {

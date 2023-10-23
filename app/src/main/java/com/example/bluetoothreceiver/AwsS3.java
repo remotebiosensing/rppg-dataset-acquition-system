@@ -47,6 +47,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AwsS3 {
+    private static final String TAG = AwsS3.class.getSimpleName();
     AWSCredentials awsCredentials;
     private AmazonS3Client s3Client;
     /*private String accessKey = "AKIAWWZYTIF57XRMCFPO";
@@ -162,15 +163,7 @@ public class AwsS3 {
                     errorCode[0] = null;
                 } catch (AmazonS3Exception e) {
                     errorCode[0] = e.getErrorCode();
-                    if(errorCode[0].compareTo("InvalidAccessKeyId") == 0) {
-                        Log.e("TEST", "잘못된 액세스 키");
-                    } else if(errorCode[0].compareTo("SignatureDoesNotMatch") == 0) {
-                        Log.e("TEST", "잘못된 시크릿 키");
-                    } else if(errorCode[0].compareTo("NoSuchBucket") == 0) {
-                        Log.e("TEST", "잘못된 버킷");
-                    } else if(errorCode[0].compareTo("PermanentRedirect") == 0) {
-                        Log.e("TEST", "잘못된 지역");
-                    }
+                    Log.d(TAG, ErrorCode.valueOf(errorCode[0]).errString());
                 }
             }
         });

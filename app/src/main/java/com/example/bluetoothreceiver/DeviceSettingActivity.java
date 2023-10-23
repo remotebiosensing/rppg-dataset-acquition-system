@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 public class DeviceSettingActivity extends Activity {
+    private static final String TAG = DeviceSettingActivity.class.getSimpleName();
     EditText participantFullIDEditText;
     EditText serialNumberEditText;
     EditText dataBucketURLEditText;
@@ -54,13 +55,13 @@ public class DeviceSettingActivity extends Activity {
                     Animation animShake = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.shake_animation);
                     if(errorCode.compareTo("InvalidAccessKeyId") == 0) {
                         accessKeyEditText.startAnimation(animShake);
-                            Log.e("TEST", "accessKey shake");
+                            Log.e(TAG, "accessKey shake");
                     } else if(errorCode.compareTo("SignatureDoesNotMatch") == 0) {
                         secretKeyEditText.startAnimation(animShake);
-                        Log.e("TEST", "secretKey shake");
+                        Log.e(TAG, "secretKey shake");
                     } else if(errorCode.compareTo("NoSuchBucket") == 0 || errorCode.compareTo("PermanentRedirect") == 0) {
                         dataBucketURLEditText.startAnimation(animShake);
-                        Log.e("TEST", "dataBucketURL shake");
+                        Log.e(TAG, "dataBucketURL shake");
                     }
                 } else {
                     processingAndSave(participantFullID, serialNumber, dataBucketURL, accessKey, secretKey);
@@ -71,11 +72,11 @@ public class DeviceSettingActivity extends Activity {
     }
 
     private void processingAndSave(String participantFullID, String serialNumber, String dataBucketURL, String accessKey, String secretKey){
-        SharedPreferences sharedPreferences = getSharedPreferences("DeviceSettings", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(Config.KEY_DEVICE_SETTINGS, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         String bucket = dataBucketURL.substring(5).split("/")[0];
-        Log.e("TEST", "bucket : " + bucket);
+        Log.e(TAG, "bucket : " + bucket);
         //String prefix = dataBucketURL[1] + "/" + split + "participant_data/" + date + "/" + serialNumber + "/" + rawdata + "/v6/";
         String[] splitID = participantFullID.split("-");
         String beforeDate = "v2/" + splitID[0] + "/" + splitID[1] + "/" + splitID[2] + "/participant_data/";

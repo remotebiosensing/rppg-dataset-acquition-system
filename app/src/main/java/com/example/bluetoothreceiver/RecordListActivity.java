@@ -43,6 +43,7 @@ import java.util.Set;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class RecordListActivity extends AppCompatActivity {
+    private static final String TAG = RecordListActivity.class.getSimpleName();
     TextView networkNotConnectedTextView;
     LinearLayout recordingListLinearLayout;
     TextView deviceSettingTextView;
@@ -64,7 +65,7 @@ public class RecordListActivity extends AppCompatActivity {
         findView();
         initView();
 
-        recordDirectory = new File(getFilesDir(), "record");
+        recordDirectory = new File(getFilesDir(), Config.CHILD_RECORD_DIR);
         addRecordList();
         synchronizeTracker();
         /*new Thread(new Runnable() {
@@ -156,10 +157,11 @@ public class RecordListActivity extends AppCompatActivity {
         Long timestamp = Long.parseLong(folderName);
 
         if(isImageExtracted(timestamp)) {
-            imageView.setImageBitmap(BitmapFactory.decodeFile(recordDirectory.getPath() + "/" + folderName + "/image/" + folderName + ".jpg"));
+            imageView.setImageBitmap(BitmapFactory.decodeFile(
+                    recordDirectory.getPath() + "/" + folderName + "/" + Config.CHILD_IMAGE_DIR + "/" + folderName + ".jpg"));
         } else {
             Data inputData = new Data.Builder()
-                    .putString("timestamp", String.valueOf(timestamp))
+                    .putString(Config.FIELD_TIMESTAMP, String.valueOf(timestamp))
                     .build();
             OneTimeWorkRequest oneTimeWorkRequest = new OneTimeWorkRequest.Builder(ImageExtractWorker.class)
                     .setInputData(inputData)
@@ -178,7 +180,7 @@ public class RecordListActivity extends AppCompatActivity {
             isSyncedTextView.setText("O");
         } else {
             isSyncedTextView.setText("X");
-            Log.e("TEST", "NOT SYNCED");
+            Log.e(TAG, "NOT SYNCED");
             Data inputData = new Data.Builder()
                     .putLong("firstTimestamp", timestamp)
                     .build();
@@ -186,7 +188,8 @@ public class RecordListActivity extends AppCompatActivity {
                     .setInputData(inputData)
                     .build();
 
-            WorkManager.getInstance(getApplicationContext()).enqueueUniqueWork("work" + timestamp, ExistingWorkPolicy.REPLACE, oneTimeWorkRequest);
+            WorkManager.getInstance(getApplicationContext())
+                    .enqueueUniqueWork("work" + timestamp, ExistingWorkPolicy.REPLACE, oneTimeWorkRequest);
 
             notSynced.put(timestamp, isSyncedTextView);
         }
@@ -195,8 +198,9 @@ public class RecordListActivity extends AppCompatActivity {
     }
 
     private boolean isImageExtracted(Long timestamp) {
-        File recordDirectory = new File(getFilesDir().getPath() + "/record/" + timestamp, "image");
-        return Arrays.asList(recordDirectory.list()).contains(timestamp + ".jpg");
+        File recordDirectory = new File(getFilesDir().getPath()
+                + "/" + Config.CHILD_RECORD_DIR + "/" + timestamp, Config.CHILD_IMAGE_DIR);
+        return Arrays.asList(recordDirectory.list()).contains(timestamp + Config.JPG_FOOTER);
     }
 
     private void waitAndSetImage(Long timestamp, ImageView imageView) {
@@ -210,7 +214,8 @@ public class RecordListActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            imageView.setImageBitmap(BitmapFactory.decodeFile(recordDirectory.getPath() + "/" + timestamp + "/image/" + timestamp + ".jpg"));
+                            imageView.setImageBitmap(BitmapFactory.decodeFile(
+                                    recordDirectory.getPath() + "/" + timestamp + "/" + Config.CHILD_IMAGE_DIR + "/" + timestamp + Config.JPG_FOOTER));
                         }
                     });
                 }
@@ -223,12 +228,12 @@ public class RecordListActivity extends AppCompatActivity {
     }
 
     private boolean isSynced(Long timestamp){
-        File recordDirectory = new File(getFilesDir().getPath() + "/record", String.valueOf(timestamp));
+        File recordDirectory = new File(getFilesDir().getPath() + "/" + Config.CHILD_RECORD_DIR, String.valueOf(timestamp));
         String[] folderArray = recordDirectory.list();
         for(int i = 0; i < folderArray.length; i++) {
         }
         List<String> fileList = new ArrayList<>(Arrays.asList(folderArray));
-        return fileList.contains("syncedBvp.csv");
+        return fileList.contains(Config.FILE_SYNCED_BVP + Config.CSV_FOOTER);
     }
 
     private void synchronizeTracker() {

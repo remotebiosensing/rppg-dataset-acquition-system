@@ -18,7 +18,7 @@ public class BvpSync {
         File tempBvpFile = new File(filePath, "tempBvp.csv");
         ArrayList<Long> timestampList = readImageTimestamp(filePath);
         ArrayList<Pair<Long, Float>> bvpList = readBvpTimestamp(filePath);
-        File syncedBvpFile = new File(filePath, "syncedBvp.csv");
+        File syncedBvpFile = new File(filePath, Config.FILE_SYNCED_BVP + Config.CSV_FOOTER);
 
         writeSyncedBvp(tempBvpFile, timestampList, bvpList, syncedBvpFile);
 

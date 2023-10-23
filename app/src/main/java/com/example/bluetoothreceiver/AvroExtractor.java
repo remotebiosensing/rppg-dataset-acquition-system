@@ -26,8 +26,7 @@ import java.util.Set;
 public class AvroExtractor {
     public static void extractDataFromAvroFile(String saveFolder, ArrayList<File> avroFileList, long firstTimestamp, long lastTimestamp) {
         try {
-            for(int i = 0 ; i < avroFileList.size(); i++) {
-                File avroFile = avroFileList.get(i);
+            for(File avroFile : avroFileList) {
                 SeekableFileInput input = new SeekableFileInput(avroFile);
 
                 Schema schema = new DataFileReader<>(input, new GenericDatumReader<>()).getSchema();
@@ -44,9 +43,11 @@ public class AvroExtractor {
                     ObjectMapper mapper = new ObjectMapper();
                     //ArrayNode jsonArray = mapper.createArrayNode();
                     ArrayList<ObjectNode> objectNodeList = new ArrayList<>();
-                    extractInfo(mapper, objectNodeList, saveFolder, rawData, "bvp", new String[]{"values"}, firstTimestamp, lastTimestamp, Float.class, i != 0);
+                    extractInfo(mapper, objectNodeList, saveFolder, rawData, "bvp", new String[]{"values"},
+                            firstTimestamp, lastTimestamp, Float.class, avroFileList.indexOf(avroFile) != 0);
                     //extractInfo(saveFolder, rawData, "gyroscope", new String[]{"x", "y", "z"}, firstTimestamp, lastTimestamp, Integer.class);
-                    extractInfo(mapper, objectNodeList, saveFolder, rawData, "accelerometer", new String[]{"x", "y", "z"}, firstTimestamp, lastTimestamp, Integer.class, false);
+                    extractInfo(mapper, objectNodeList, saveFolder, rawData, "accelerometer", new String[]{"x", "y", "z"},
+                            firstTimestamp, lastTimestamp, Integer.class, false);
 
                     //for(int i = 0; i < objectNodeList.size(); i++) {
                     //    jsonArray.add(objectNodeList.get(i));
@@ -75,7 +76,7 @@ public class AvroExtractor {
         for(int i = 0; i < attribute.length; i++) {
             dataList.add((GenericData.Array<T>) data.get(attribute[i]));
         }
-        File file = new File(saveFolder, "raw" + dataName.substring(0, 1).toUpperCase() + dataName.substring(1) + ".csv");
+        File file = new File(saveFolder, "raw" + dataName.substring(0, 1).toUpperCase() + dataName.substring(1) + Config.CSV_FOOTER);
 
         BufferedWriter bw = null;
         try {
